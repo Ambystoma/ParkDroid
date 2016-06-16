@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ParkingDroid</string>
+    <string name="drawer_open">drawer Open</string>
+    <string name="drawer_close">drawer Close</string>
+    <string name="Drawer_Settings">Settings</string>
+    <string name="Drawer_Historic">Històric</string>
+    <string name="Toolbar_parkingdroid">ParkingDroid</string>
+    <string name="Tabbar_Parking">Parking</string>
+    <string name="Tabbar_Indoor">Indoor</string>
+    <string name="Tabbar_Maps">Map</string>
+</resources>
