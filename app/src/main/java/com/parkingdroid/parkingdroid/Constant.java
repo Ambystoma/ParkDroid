@@ -10,6 +10,6 @@ public class Constant {
     public static final int LOCATION_COARSE_REQUEST = 2;
     public static final int LOCATION_FINE_REQUEST = 1;
     public static final int INTERNET = 0;
-    public static final String TEST_CONSTANT = "3" ;
+    public static final String TEST_CONSTANT = "1" ;
 
 }
