@@ -3,11 +3,13 @@ package com.parkingdroid.parkingdroid.Fragments;
 
 
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -22,7 +24,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.parkingdroid.parkingdroid.Constants;
 import com.parkingdroid.parkingdroid.R;
+import com.parkingdroid.parkingdroid.Utils;
 
 
 public class FragmentMap extends SupportMapFragment {
@@ -31,6 +35,9 @@ public class FragmentMap extends SupportMapFragment {
     private Location location;
     private GoogleApiClient mClient;
     private GoogleMap mMap;
+    public Location park;
+    public Location current;
+    private SharedPreferences mPrefs;
 
 
     @Override
@@ -40,38 +47,52 @@ public class FragmentMap extends SupportMapFragment {
                 .addApi(LocationServices.API)
                 .build();
 
+        park = new Location("park");
+
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        park.setLatitude(Utils.getDouble(mPrefs, Constants.SP_PARK_LATITUDE, 0.0));
+        park.setLongitude(Utils.getDouble(mPrefs, Constants.SP_PARK_LONGITUDE, 0.0));
+
+
         getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap googleMap) {
                 mMap = googleMap;
-                UpdateUI();
+                UpdateUI(park,current);
             }
         });
 
     }
 
 
-    private void UpdateUI(){
-        LatLng itemPoint = new LatLng(41.506687,2.389068);
-        LatLng itemPoint2 = new LatLng(41.490314,2.357685);
+    private void UpdateUI(Location park, Location current){
 
-        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.appicon);
-        BitmapDescriptor itemBitmap = BitmapDescriptorFactory.fromBitmap(icon);
 
-        MarkerOptions markerOptions = new MarkerOptions()
-                .position(itemPoint)
-                .icon(itemBitmap);
+        if (park.getLatitude() != 0.0 && park.getLongitude() != 0.0) {
 
-        mMap.clear();
-        mMap.addMarker(markerOptions);
+            LatLng itemPoint = new LatLng(park.getLatitude(), park.getLongitude());
+            LatLng itemPoint2 = new LatLng(41.490314, 2.357685);
 
-        LatLngBounds bounds = new LatLngBounds.Builder()
-                .include(itemPoint)
-                .include(itemPoint2)
-                .build();
+            Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.appicon);
+            BitmapDescriptor itemBitmap = BitmapDescriptorFactory.fromBitmap(icon);
 
-        CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds,500);
-        mMap.animateCamera(update);
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .position(itemPoint)
+                    .icon(itemBitmap);
+
+            mMap.clear();
+            mMap.addMarker(markerOptions);
+
+            LatLngBounds bounds = new LatLngBounds.Builder()
+                    .include(itemPoint)
+                    .include(itemPoint2)
+                    .build();
+
+            CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds, 50);
+            mMap.animateCamera(update);
+
+        }
 
     }
 

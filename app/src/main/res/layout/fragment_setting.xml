@@ -2,13 +2,39 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorGreenDark">
+    >
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:textSize="32sp"
-        android:text="Settings"/>
+        android:text="Settings"
+        android:layout_marginTop="30dp"/>
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Traking Service"
+        android:id="@+id/settings_switch1"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
+        android:switchPadding="130dp"
+        android:textSize="20dp"
+        android:checked="true"
+        />
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GeoFencing Service"
+        android:id="@+id/settings_switch2"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
+        android:switchPadding="90dp"
+        android:textSize="20dp"
+        android:checked="true"
+        />
+
 
 </LinearLayout>

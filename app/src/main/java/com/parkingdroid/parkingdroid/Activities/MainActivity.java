@@ -2,43 +2,60 @@ package com.parkingdroid.parkingdroid.Activities;
 
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 
 import android.location.Location;
-import android.location.LocationListener;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.telephony.ServiceState;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
-import com.parkingdroid.parkingdroid.Constant;
+import com.parkingdroid.parkingdroid.Constants;
 import com.parkingdroid.parkingdroid.Fragments.FragmentHistoric;
+import com.parkingdroid.parkingdroid.Fragments.FragmentLogin;
 import com.parkingdroid.parkingdroid.Fragments.FragmentSettings;
 import com.parkingdroid.parkingdroid.Fragments.MainActivityFragment;
+import com.parkingdroid.parkingdroid.Global;
 import com.parkingdroid.parkingdroid.R;
+import com.parkingdroid.parkingdroid.Services.DetectedActivitiesIntentService;
 import com.parkingdroid.parkingdroid.Utils;
 
 import java.util.ArrayList;
@@ -46,22 +63,38 @@ import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ResultCallback<Status>,
+        FragmentSettings.OnNewsItemSelectedListener
+{
 
     private DrawerLayout drawerLayout;
     private Toolbar toolbar;
     private NavigationView navigationView;
     private ActionBarDrawerToggle drawerToggle;
-    public static final String FIRST_FRAGMENT = "first_fragment";
-    public static final String SECOND_FRAGMENT = "second_fragment";
-    public static final String THIRD_FRAGMENT = "third_fragment";
+
     private TextView mTitle;
     private int currentapiVersion =android.os.Build.VERSION.SDK_INT;
-    private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequest;
+    private GoogleApiClient mActivityGoogleApiClient;
+   // private GoogleApiClient mLocationGoogleApiClient;
+   // private LocationRequest mLocationRequest;
     public  Location mLocation;
+    private ArrayList<DetectedActivity> updatedActivities;
+    public List<Location> Locations;
+    public boolean activitiesOK;
+    private SharedPreferences mPrefs;
+    private Fragment mainActivityFragment;
+    private Fragment currentFragment;
+    public android.support.v4.app.FragmentManager fragmentManager;
+    public android.support.v4.app.FragmentTransaction fragmentTransaction;
+    public Global app;
 
-//
+
+
+    /**
+     * A receiver for DetectedActivity objects broadcast by the
+     * {@code ActivityDetectionIntentService}.
+     */
+    protected ActivityDetectionBroadcastReceiver mBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,16 +121,36 @@ public class MainActivity extends AppCompatActivity implements
         // Tie DrawerLayout events to the ActionBarToggle
         drawerLayout.addDrawerListener(drawerToggle);
 
-        //GoogleApiClient for location
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).build();
+        //Instanciate globals
+        app = new Global(this);
 
+        //calling FragmentManager
+        fragmentManager = getSupportFragmentManager();
+        fragmentTransaction = fragmentManager.beginTransaction();
 
+        if (Utils.isNetworkAvailable(this)) {
+
+            //GoogleApiClient for location
+           /* mLocationGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(LocationServices.API)
+                    //.addApi(ActivityRecognition.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this).build();*/
+
+            buildActivityRecognitionGoogleApiClient();
+
+            mBroadcastReceiver = new ActivityDetectionBroadcastReceiver();
+
+            mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        }else{
+            Toast.makeText(this, "It's impossible know where you park without Connection",Toast.LENGTH_SHORT).show();
+        }
         //Adding Fragment
         //MainActivityFragment mainActivityFragment = (MainActivityFragment) getFragmentManager().findFragmentById(R.id.flContent);
-        Fragment mainActivityFragment = getSupportFragmentManager().findFragmentByTag(FIRST_FRAGMENT);
+        //Fragment mainActivityFragment = getSupportFragmentManager().findFragmentByTag(FIRST_FRAGMENT);
+
+        mainActivityFragment = getSupportFragmentManager().findFragmentByTag(Constants.FIRST_FRAGMENT);
 
         if (mainActivityFragment == null){
 
@@ -105,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements
 
             android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
             android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.add(R.id.flContent,mainActivityFragment,FIRST_FRAGMENT);
+            fragmentTransaction.add(R.id.flContent,mainActivityFragment,Constants.FIRST_FRAGMENT);
             fragmentTransaction.commit();
 
         }
@@ -114,18 +167,25 @@ public class MainActivity extends AppCompatActivity implements
             Utils.checkAllPermissions(this,this);
         }
 
+        if (app.getAdresses().size()>0){
+
+        }
+
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
+
+        if (mActivityGoogleApiClient != null) mActivityGoogleApiClient.connect();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        mGoogleApiClient.disconnect();
+       // mLocationGoogleApiClient.disconnect();
+        if (mActivityGoogleApiClient!= null){mActivityGoogleApiClient.disconnect();}
+
     }
 
     // Callback with the request from calling checkAllPermissions(...)
@@ -134,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements
                                            @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
         // Make sure it's our original READ_CONTACTS request
-        if (requestCode == Constant.LOCATION_FINE_REQUEST){ // || requestCode == Constant.LOCATION_COARSE_REQUEST || requestCode == Constant.INTERNET) {
+        if (requestCode == Constants.LOCATION_FINE_REQUEST){ // || requestCode == Constants.LOCATION_COARSE_REQUEST || requestCode == Constants.INTERNET) {
             if ( grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                //Permissions ok!
             } else {
@@ -186,34 +246,50 @@ public class MainActivity extends AppCompatActivity implements
 
     public void selectDrawerItem(MenuItem menuItem) {
         // Create a new fragment and specify the fragment to show based on nav item clicked
-        Fragment fragment = null;
+        currentFragment = null;
         Class fragmentClass = null;
+        String TAG = null;
+
         switch(menuItem.getItemId()) {
             case R.id.nav_first_fragment:
                 fragmentClass = MainActivityFragment.class;
+                mTitle.setText("ParkDroid");
+                TAG = Constants.FIRST_FRAGMENT;
                 break;
             case R.id.nav_second_fragment:
-                fragmentClass = FragmentHistoric.class;
+                /*if (mPrefs.contains("islogin")) {
+                    if (mPrefs.getBoolean("islogin",false)){
+                        fragmentClass = FragmentLogin.class;
+                    }else{
+                        fragmentClass = FragmentHistoric.class;
+                    }
+                }else{
+                    fragmentClass = FragmentHistoric.class;
+                }*/
+                fragmentClass = FragmentLogin.class;
                 mTitle.setText(R.string.Drawer_Historic);
+                TAG = Constants.SECOND_FRAGMENT;
                 break;
             case R.id.nav_third_fragment:
                 fragmentClass = FragmentSettings.class;
                 mTitle.setText(R.string.Drawer_Settings);
+                TAG = Constants.THIRD_FRAGMENT;
                 break;
             default:
                 fragmentClass = MainActivityFragment.class;
         }
 
         try {
-            if (fragmentClass != null){fragment = (Fragment) fragmentClass.newInstance();}
+            if (fragmentClass != null){currentFragment = (Fragment) fragmentClass.newInstance();}
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
-        android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        fragmentTransaction.replace((R.id.flContent), fragment);
+        fragmentManager = getSupportFragmentManager();
+        fragmentTransaction = fragmentManager.beginTransaction();
+
+        fragmentTransaction.replace((R.id.flContent), currentFragment,TAG);
         fragmentTransaction.commit();
 
         // Highlight the selected item has been done by NavigationView
@@ -245,28 +321,16 @@ public class MainActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
 
     }
-
+   //when GoogleApiClient is connected..
     @Override
     public void onConnected(@Nullable Bundle bundle) {
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
+        //boolean con = mPrefs.getBoolean("trakingService",false);
 
-            Location mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            // Note that this can be NULL if last location isn't already known.
-            if (mCurrentLocation != null) {
-                // Print current location if not null
-                Log.i("LOCATION", "current location: " + mCurrentLocation.toString());
-                LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-            }
-            // Begin polling for new location updates.
-            mLocationRequest = LocationRequest.create()
-                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                    .setInterval(10000)
-                    .setNumUpdates(1)
-                    .setFastestInterval(500);
-            // Request location updates
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        if (!mPrefs.contains("trakingService")){
+            UpdatesHandler();
+        }else{
+            removeUpdatesHandler();
         }
 
     }
@@ -288,16 +352,137 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onLocationChanged(Location location) {
 
-        mLocation = location;
-        String msg = "Updated Location: " +
-                Double.toString(location.getLatitude()) + "," +
-                Double.toString(location.getLongitude());
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        // You can now create a LatLng Object for use with maps
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        Log.i("LOCATION", msg.toString());
 
     }
 
+
+    protected synchronized void buildActivityRecognitionGoogleApiClient() {
+
+        mActivityGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(ActivityRecognition.API)
+                .build();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+            // Register the broadcast receiver that informs this activity of the DetectedActivity
+            // object broadcast sent by the intent service.
+            LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver,
+                    new IntentFilter(Constants.BROADCAST_ACTION));
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+        super.onPause();
+    }
+
+    @Override
+    public void onResult(@NonNull Status status) {
+
+    }
+
+    @Override
+    public void onSettingsPicked(boolean servicesActivity) {
+        activitiesOK = servicesActivity;
+
+    }
+
+    /**
+     * Receiver for intents sent by DetectedActivitiesIntentService via a sendBroadcast().
+     * Receives a list of one or more DetectedActivity objects associated with the current state of
+     * the device.
+     */
+    public class ActivityDetectionBroadcastReceiver extends BroadcastReceiver {
+        protected static final String TAG = "activity-detection-response-receiver";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            updatedActivities = intent.getParcelableArrayListExtra(Constants.ACTIVITY_EXTRA);
+
+            if (updatedActivities != null){
+
+
+                MainActivityFragment mainActivityFragment = (MainActivityFragment) getSupportFragmentManager().findFragmentByTag(Constants.FIRST_FRAGMENT);
+
+                if (mainActivityFragment != null){
+                mainActivityFragment.getLocatcion();}
+
+
+                updatedActivities = null;
+            }
+        }
+    }
+
+    /**
+     * Registers for activity recognition updates using
+     * {@link com.google.android.gms.location.ActivityRecognitionApi#requestActivityUpdates} which
+     * returns a {@link com.google.android.gms.common.api.PendingResult}. Since this activity
+     * implements the PendingResult interface, the activity itself receives the callback, and the
+     * code within {@code onResult} executes. Note: once {@code requestActivityUpdates()} completes
+     * successfully, the {@code DetectedActivitiesIntentService} starts receiving callbacks when
+     * activities are detected.
+     */
+
+    public void UpdatesHandler() {
+
+        if (!mActivityGoogleApiClient.isConnected()) {
+
+            Toast.makeText(this, R.string.not_connected,
+                    Toast.LENGTH_SHORT).show();
+            mActivityGoogleApiClient.connect();
+
+            return;
+        }
+        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
+                mActivityGoogleApiClient,
+                Constants.DETECTION_INTERVAL_IN_MILLISECONDS,
+                getActivityDetectionPendingIntent()
+        ).setResultCallback(this);
+    }
+
+    /**
+     * Removes activity recognition updates using
+     * {@link com.google.android.gms.location.ActivityRecognitionApi#removeActivityUpdates} which
+     * returns a {@link com.google.android.gms.common.api.PendingResult}. Since this activity
+     * implements the PendingResult interface, the activity itself receives the callback, and the
+     * code within {@code onResult} executes. Note: once {@code removeActivityUpdates()} completes
+     * successfully, the {@code DetectedActivitiesIntentService} stops receiving callbacks about
+     * detected activities.
+     */
+    public void removeUpdatesHandler() {
+        if (!mActivityGoogleApiClient.isConnected()) {
+            Toast.makeText(this, getString(R.string.not_connected), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Remove all activity updates for the PendingIntent that was used to request activity
+        // updates.
+        ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(
+                mActivityGoogleApiClient,
+                getActivityDetectionPendingIntent()
+        ).setResultCallback(this);
+    }
+
+    /**
+     * Gets a PendingIntent to be sent for each activity detection.
+     */
+    private PendingIntent getActivityDetectionPendingIntent() {
+        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
+
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private void settingLocationAround(Location location){
+
+
+
+    }
 
 }

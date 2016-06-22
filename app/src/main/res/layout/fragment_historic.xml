@@ -1,20 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ListView
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-    </ListView>
-
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:textSize="32sp"
-        android:text="Historic"/>
+        android:text="Històric"
+        android:layout_marginTop="30dp"
+        android:id="@+id/historic_title"/>
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/historic_listView"
+            android:layout_marginTop="30dp"
+            android:layout_below="@+id/historic_title">
+
+        </ListView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:layout_centerHorizontal="true"
+            android:text="Not Historic data yet"
+            android:visibility="invisible"
+            android:id="@+id/notdata"
+            android:layout_marginTop="130dp"/>
+
+    </RelativeLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_delete_list"
+        android:tint="@color/colorWhite"
+        app:fabSize="normal"
+        app:layout_anchor="@id/historic_title"
+        app:layout_anchorGravity="bottom|right|end"
+        android:layout_marginRight="30dp"
+        android:id="@+id/delete_button"/>
 
 
-</LinearLayout>
+</android.support.design.widget.CoordinatorLayout>

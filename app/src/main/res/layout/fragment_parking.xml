@@ -7,6 +7,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:orientation="vertical"
@@ -52,8 +56,8 @@
             xmlns:card_view="http://schemas.android.com/apk/res-auto"
             xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
-            android:layout_height="130dp"
-            android:layout_marginTop="40dp"
+            android:layout_height="160dp"
+            android:layout_marginTop="20dp"
             android:layout_marginRight="30dp"
             android:layout_marginLeft="30dp"
             card_view:cardBackgroundColor="@color/colorPrimaryDark"
@@ -94,6 +98,8 @@
 
     </LinearLayout>
 
+    </ScrollView>
+
     <android.support.design.widget.FloatingActionButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -104,8 +110,6 @@
         app:layout_anchorGravity="top|right|end"
         android:layout_marginRight="30dp"
         android:id="@+id/share_button"/>
-
-
 
 
 </android.support.design.widget.CoordinatorLayout>

@@ -4,10 +4,20 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import static com.parkingdroid.parkingdroid.Constants.TAG;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -24,7 +34,8 @@ public class Utils {
             // since the user can revoke permissions at any time through Settings
 
             //List Of permissions
-            final String[] permissionsList = {Manifest.permission.ACCESS_FINE_LOCATION , Manifest.permission.INTERNET};
+            final String[] permissionsList = {Manifest.permission.ACCESS_FINE_LOCATION , Manifest.permission.INTERNET,
+            Manifest.permission.ACCESS_NETWORK_STATE,Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
             //permissionsList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
 
@@ -80,7 +91,7 @@ public class Utils {
                             // Fire off an async request to actually get the permission
                             // This will show the standard permission request dialog UI
 
-                            ActivityCompat.requestPermissions(activity,permissionsList,Constant.LOCATION_FINE_REQUEST);
+                            ActivityCompat.requestPermissions(activity,permissionsList, Constants.LOCATION_FINE_REQUEST);
                             dialog.dismiss();
                         }
                     });
@@ -89,11 +100,60 @@ public class Utils {
                     dialog.show();
                 }else {
 
-                    ActivityCompat.requestPermissions(activity, new String[]{permission}, Constant.LOCATION_FINE_REQUEST);
+                    ActivityCompat.requestPermissions(activity, new String[]{permission}, Constants.LOCATION_FINE_REQUEST);
                 }
             }
 
         }
 
+    public static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    public static boolean isBetween(int x, int lower, int upper) {
+        return lower <= x && x <= upper;
+    }
+
+
+    public static SharedPreferences.Editor putDouble(final SharedPreferences.Editor edit, final String key, final double value) {
+        return edit.putLong(key, Double.doubleToRawLongBits(value));
+    }
+
+    public static double getDouble(final SharedPreferences prefs, final String key, final double defaultValue) {
+        return Double.longBitsToDouble(prefs.getLong(key, Double.doubleToLongBits(defaultValue)));
+    }
+
+    public static void clearSharedPref(Context context){
+
+        //only for debugging
+
+        SharedPreferences mPref = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = mPref.edit();
+        editor.clear();
+        editor.apply();
+
+        SharedPreferences mPref2 = context.getSharedPreferences(Constants.SP_ADRESS,context.MODE_PRIVATE);
+        SharedPreferences.Editor editor2 = mPref.edit();
+        editor2.clear();
+        editor2.apply();
+
+    }
+
+
+    public static boolean isGooglePlayServicesAvailable(Context context) {
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
+        if (ConnectionResult.SUCCESS == resultCode) {
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, "Google Play services is available.");
+            }
+            return true;
+        } else {
+            Log.e(TAG, "Google Play services is unavailable.");
+            return false;
+        }
+    }
 
 }
