@@ -4,6 +4,10 @@ package com.parkingdroid.parkingdroid.Activities;
 import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.bluetooth.BluetoothA2dp;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -12,16 +16,12 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-
 import android.location.Location;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
-
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -31,13 +31,12 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.telephony.ServiceState;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -45,19 +44,18 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
 import com.parkingdroid.parkingdroid.Constants;
-import com.parkingdroid.parkingdroid.Fragments.FragmentHistoric;
+import com.parkingdroid.parkingdroid.Fragments.FragmentIndoor;
 import com.parkingdroid.parkingdroid.Fragments.FragmentLogin;
+import com.parkingdroid.parkingdroid.Fragments.FragmentMain_Historic;
 import com.parkingdroid.parkingdroid.Fragments.FragmentSettings;
 import com.parkingdroid.parkingdroid.Fragments.MainActivityFragment;
 import com.parkingdroid.parkingdroid.Global;
 import com.parkingdroid.parkingdroid.R;
+import com.parkingdroid.parkingdroid.Services.CarBluetoothService;
 import com.parkingdroid.parkingdroid.Services.DetectedActivitiesIntentService;
+import com.parkingdroid.parkingdroid.Services.DetectedActivitiesIntentService2;
 import com.parkingdroid.parkingdroid.Utils;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,17 +69,15 @@ public class MainActivity extends AppCompatActivity implements
     private Toolbar toolbar;
     private NavigationView navigationView;
     private ActionBarDrawerToggle drawerToggle;
-
     private TextView mTitle;
     private int currentapiVersion =android.os.Build.VERSION.SDK_INT;
     private GoogleApiClient mActivityGoogleApiClient;
-   // private GoogleApiClient mLocationGoogleApiClient;
-   // private LocationRequest mLocationRequest;
     public  Location mLocation;
     private ArrayList<DetectedActivity> updatedActivities;
     public List<Location> Locations;
     public boolean activitiesOK;
     private SharedPreferences mPrefs;
+    private SharedPreferences mPrefs2;
     private Fragment mainActivityFragment;
     private Fragment currentFragment;
     public android.support.v4.app.FragmentManager fragmentManager;
@@ -122,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements
         drawerLayout.addDrawerListener(drawerToggle);
 
         //Instanciate globals
-        app = new Global(this);
+        if (app == null) app = new Global(this);
 
         //calling FragmentManager
         fragmentManager = getSupportFragmentManager();
@@ -142,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements
             mBroadcastReceiver = new ActivityDetectionBroadcastReceiver();
 
             mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+            mPrefs2 = getSharedPreferences(Constants.SP_ADRESS,MODE_PRIVATE);
 
         }else{
             Toast.makeText(this, "It's impossible know where you park without Connection",Toast.LENGTH_SHORT).show();
@@ -156,10 +153,11 @@ public class MainActivity extends AppCompatActivity implements
 
             mainActivityFragment = new MainActivityFragment();
 
-            android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
-            android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+           /* android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+            android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();*/
             fragmentTransaction.add(R.id.flContent,mainActivityFragment,Constants.FIRST_FRAGMENT);
             fragmentTransaction.commit();
+
 
         }
         //Request Permissions
@@ -167,11 +165,33 @@ public class MainActivity extends AppCompatActivity implements
             Utils.checkAllPermissions(this,this);
         }
 
-        if (app.getAdresses().size()>0){
+        View headerview = navigationView.getHeaderView(0);
+        LinearLayout ll = (LinearLayout) headerview.findViewById(R.id.header_drawer);
 
+        ll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (mPrefs2.getBoolean(Constants.SP_ISLOGED,false)){
+                   //todo:setdaprofileactivity
+                }else{
+                    selectFragment(FragmentLogin.class);
+                }
+
+                drawerLayout.closeDrawers();
+
+            }
+        });
+
+        if (mPrefs2.getBoolean(Constants.SP_ISLOGED,false)){
+
+            //todo:set username in da header drawer
         }
 
+        startService(new Intent(MainActivity.this, CarBluetoothService.class));
+
     }
+    
 
     @Override
     protected void onStart() {
@@ -257,23 +277,27 @@ public class MainActivity extends AppCompatActivity implements
                 TAG = Constants.FIRST_FRAGMENT;
                 break;
             case R.id.nav_second_fragment:
-                /*if (mPrefs.contains("islogin")) {
-                    if (mPrefs.getBoolean("islogin",false)){
-                        fragmentClass = FragmentLogin.class;
-                    }else{
-                        fragmentClass = FragmentHistoric.class;
-                    }
+
+                if (mPrefs2.getBoolean(Constants.SP_ISLOGED,false)){
+                    fragmentClass = FragmentMain_Historic.class;
                 }else{
-                    fragmentClass = FragmentHistoric.class;
-                }*/
-                fragmentClass = FragmentLogin.class;
-                mTitle.setText(R.string.Drawer_Historic);
+                    fragmentClass = FragmentLogin.class;
+                }
+
                 TAG = Constants.SECOND_FRAGMENT;
+                /*fragmentClass = FragmentLogin.class;
+                mTitle.setText(R.string.Drawer_Historic);
+                TAG = Constants.SECOND_FRAGMENT;*/
                 break;
             case R.id.nav_third_fragment:
+                fragmentClass = FragmentIndoor.class;
+                mTitle.setText("Indoor");
+                TAG = Constants.THIRD_FRAGMENT;
+                break;
+            case R.id.nav_fourth_fragment:
                 fragmentClass = FragmentSettings.class;
                 mTitle.setText(R.string.Drawer_Settings);
-                TAG = Constants.THIRD_FRAGMENT;
+                TAG = Constants.FOURTH_FRAGMENT;
                 break;
             default:
                 fragmentClass = MainActivityFragment.class;
@@ -284,7 +308,6 @@ public class MainActivity extends AppCompatActivity implements
         } catch (Exception e) {
             e.printStackTrace();
         }
-
 
         fragmentManager = getSupportFragmentManager();
         fragmentTransaction = fragmentManager.beginTransaction();
@@ -327,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements
 
         //boolean con = mPrefs.getBoolean("trakingService",false);
 
-        if (!mPrefs.contains("trakingService")){
+        if ( !mPrefs.contains("trakingService") || mPrefs.getBoolean("trakingService",false)){
             UpdatesHandler();
         }else{
             removeUpdatesHandler();
@@ -379,8 +402,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
-        super.onPause();
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+
     }
 
     @Override
@@ -407,13 +430,16 @@ public class MainActivity extends AppCompatActivity implements
 
             updatedActivities = intent.getParcelableArrayListExtra(Constants.ACTIVITY_EXTRA);
 
-            if (updatedActivities != null){
 
+            if (updatedActivities != null ){
 
-                MainActivityFragment mainActivityFragment = (MainActivityFragment) getSupportFragmentManager().findFragmentByTag(Constants.FIRST_FRAGMENT);
+            //todo set location in a global
 
-                if (mainActivityFragment != null){
-                mainActivityFragment.getLocatcion();}
+             //   MainActivityFragment mainActivityFragment = (MainActivityFragment) getSupportFragmentManager().findFragmentByTag(Constants.FIRST_FRAGMENT);
+
+              //  if (mainActivityFragment != null) {
+              //      mainActivityFragment.getLocatcion();
+              //  }
 
 
                 updatedActivities = null;
@@ -435,17 +461,18 @@ public class MainActivity extends AppCompatActivity implements
 
         if (!mActivityGoogleApiClient.isConnected()) {
 
-            Toast.makeText(this, R.string.not_connected,
-                    Toast.LENGTH_SHORT).show();
+          //  Toast.makeText(this, R.string.not_connected,Toast.LENGTH_SHORT).show();
             mActivityGoogleApiClient.connect();
 
             return;
         }
-        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
-                mActivityGoogleApiClient,
-                Constants.DETECTION_INTERVAL_IN_MILLISECONDS,
-                getActivityDetectionPendingIntent()
-        ).setResultCallback(this);
+        if (getActivityDetectionPendingIntent() != null) {
+            ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
+                    mActivityGoogleApiClient,
+                    Constants.DETECTION_INTERVAL_IN_MILLISECONDS,
+                    getActivityDetectionPendingIntent()
+            ).setResultCallback(this);
+        }
     }
 
     /**
@@ -474,15 +501,58 @@ public class MainActivity extends AppCompatActivity implements
      * Gets a PendingIntent to be sent for each activity detection.
      */
     private PendingIntent getActivityDetectionPendingIntent() {
-        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
 
-        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+
+            Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
+
+            return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        }else if (currentapiVersion >= Build.VERSION_CODES.M) {
+                Utils.checkAllPermissions(this,this);
+        }
+        return null;
     }
 
-    private void settingLocationAround(Location location){
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
 
+            if(resultCode == Activity.RESULT_OK){
+
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {
+                Toast.makeText(this,"If you want to get indoor location it's important to turn on Bluetooth",Toast.LENGTH_SHORT).show();
+            }
+    }
+
+    public void selectFragment (Class fragmentClass){
+
+        String TAG = "";
+
+        switch (fragmentClass.getSimpleName()){
+            case "FragmentMain_Historic":
+                TAG = Constants.SECOND_FRAGMENT;
+
+        }
+
+        try {
+            currentFragment = (Fragment) fragmentClass.newInstance();
+            fragmentManager = getSupportFragmentManager();
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace((R.id.flContent), currentFragment,TAG);
+            fragmentTransaction.commit();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
     }
+
 
 }

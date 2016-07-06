@@ -10,4 +10,5 @@
     <string name="Tabbar_Maps">Map</string>
     <string name="not_connected">Not Connected for retreiving Updates</string>
     <string name="geofence_error">Can\'t get geoFenceEvent!</string>
+    <string name="parking_NoAdress">No es dispossa d\'una darrera adreça d\'aparcament coneguda</string>
 </resources>

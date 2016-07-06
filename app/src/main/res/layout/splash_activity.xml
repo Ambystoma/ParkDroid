@@ -12,20 +12,16 @@
         android:src="@drawable/splashnica"
         android:scaleType="fitXY"/>
 
-    <ImageView
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_centerHorizontal="true"
-        android:src="@drawable/c3p0"
-        android:id="@+id/c3p0"
-        android:layout_below="@+id/tittle"/>
 
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/tittle"
         android:textSize="50sp"
         android:text="WELCOME TO \n PARKDROID"
-        android:textColor="@color/colorBlack"/>
+        android:textColor="@color/colorWhite"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp"
+        />
 
 </RelativeLayout>

@@ -12,6 +12,10 @@
         <item
             android:id="@+id/nav_third_fragment"
             android:icon="@drawable/ic_action_name3"
+            android:title="Indoor" />
+        <item
+            android:id="@+id/nav_fourth_fragment"
+            android:icon="@drawable/ic_action_name3"
             android:title="Settings" />
     </group>
 </menu>

@@ -14,7 +14,7 @@
     <ImageView
         android:layout_width="250dp"
         android:layout_height="150dp"
-        android:src="@drawable/c3p0"
+        android:src="@drawable/logo1"
         android:layout_gravity="center"
         android:layout_marginTop="50dp"
         android:id="@+id/loginlogo"/>
@@ -33,7 +33,9 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:ems="10"
-            android:hint="Username" />
+            android:hint="Email"
+            android:lines="1"
+            android:singleLine="true"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -52,7 +54,9 @@
             android:hint="Password"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
-            android:ems="10" />
+            android:ems="10"
+            android:inputType="textPassword"
+            android:id="@+id/password"/>
     </android.support.design.widget.TextInputLayout>
 
     <LinearLayout
@@ -65,14 +69,31 @@
             android:layout_width="150dp"
             android:layout_height="50dp"
             android:text="LOGIN"
-            android:layout_marginTop="10dp"/>
+            android:layout_marginTop="10dp"
+            android:id="@+id/login"/>
         <Button
             android:layout_width="150dp"
             android:layout_height="50dp"
-            android:text="REGISTER"
-            android:layout_marginTop="10dp"/>
+            android:text="Sign UP"
+            android:layout_marginTop="10dp"
+            android:id="@+id/signup"/>
 
     </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/loadingPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="30dp"
+        android:gravity="center">
+
+        <ProgressBar
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:indeterminate="true" />
+
+    </RelativeLayout>
 
 
 

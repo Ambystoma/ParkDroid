@@ -4,7 +4,7 @@ package com.parkingdroid.parkingdroid;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-
+import com.parkingdroid.parkingdroid.Constants;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,16 +19,27 @@ public class Global extends Application {
     private SharedPreferences mPref;
     private SharedPreferences.Editor editor;
     private Set<String> set;
-    public boolean isLogued;
+    private boolean isLogued;
+    private boolean isGeofence;
+
+
+
+    public Global(){
+
+
+    }
 
     public Global (Context context) {
-
+        super();
         adresses = new ArrayList<>();
         dates = new ArrayList<>();
         mPref = context.getSharedPreferences(Constants.SP_ADRESS,MODE_PRIVATE);
         editor = mPref.edit();
         set = new HashSet<>();
         latlongs = new ArrayList<>();
+        isGeofence=true;
+
+
 
         if (mPref.contains(Constants.SP_ADRESS_LIST)){
 
@@ -81,10 +92,25 @@ public class Global extends Application {
         editor.apply();
     }
 
-    public void setIslogued(){
-        //SharedPreferences mpref2 =
+
+    public boolean isLogued() {
+        return isLogued;
     }
 
+    public void setLogued(boolean logued) {
+
+        isLogued = logued;
+        editor.putBoolean(Constants.SP_ISLOGED,logued);
+        editor.commit();
+    }
+
+    public boolean isGeofence() {
+        return isGeofence;
+    }
+
+    public void setGeofence(boolean geofence) {
+        isGeofence = geofence;
+    }
 
 
 }

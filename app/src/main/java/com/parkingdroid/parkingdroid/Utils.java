@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
@@ -17,8 +19,11 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import static com.parkingdroid.parkingdroid.Constants.TAG;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 
 public class Utils {
@@ -154,6 +159,10 @@ public class Utils {
             Log.e(TAG, "Google Play services is unavailable.");
             return false;
         }
+    }
+
+    public static boolean isNumeric(String s) {
+        return s.matches("[-+]?\\d*\\.?\\d+");
     }
 
 }

@@ -20,14 +20,16 @@ public final class Constants {
     public static final String BROADCAST_ACTION = PACKAGE_NAME + ".BROADCAST_ACTION";
     public static final String GEOFENCE_INTENT = PACKAGE_NAME + ".GEOFENCE_INTENT";
     public static final String ACTIVITY_EXTRA = PACKAGE_NAME + ".ACTIVITY_EXTRA";
+    public static final String  BEACON_EXTRA = PACKAGE_NAME + ".BEACON_EXTRA";
 
-    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 30000;
-    public static final int LOCATION_INTERVAL = 10000;
-    public static final int LOCATION_FASTEST_INTERVAL = 500;
+    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 0;
+    public static final int LOCATION_INTERVAL = 0;
+    public static final int LOCATION_FASTEST_INTERVAL = 0;
 
     public static final String FIRST_FRAGMENT = "first_fragment";
     public static final String SECOND_FRAGMENT = "second_fragment";
     public static final String THIRD_FRAGMENT = "third_fragment";
+    public static final String FOURTH_FRAGMENT = "fourth_fragment";
 
     //Shared preferences notation
     public static final String SP_PARK_LATITUDE = "ParkLat";
@@ -35,7 +37,12 @@ public final class Constants {
     public static final String SP_ADRESS = "AdressPark";
     public static final String SP_ADRESS_LIST = "AdressPark";
     public static final String SP_ADRESS_DATE_LIST = "AdressDatePark";
+    public static final String SP_ADRESS_DATE_LIST2 = "AdressDateParkdos";
     public static final String SP_LATLONG_LIST = "LatlongPark";
+    public static final String SP_ISLOGED = "islogued";
+    public static final String SP_ENTERGEO = "entergeo";
+    public static final String SP_INDOORPARK = "indoorpark";
+    public static final String SP_BTDEVICE = "devise";
 
     // An app with dynamically-created geofences would want to include a reasonable expiration time.
     public static final long GEOFENCE_EXPIRATION_TIME = Geofence.NEVER_EXPIRE;

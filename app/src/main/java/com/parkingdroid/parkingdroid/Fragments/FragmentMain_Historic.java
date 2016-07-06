@@ -15,6 +15,9 @@ import com.parkingdroid.parkingdroid.R;
 
 public class FragmentMain_Historic extends Fragment {
 
+    final FragmentHistoric fragment_historic = new FragmentHistoric();
+    final FragmentMap_Historic fragmentMap = new FragmentMap_Historic();
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -28,13 +31,10 @@ public class FragmentMain_Historic extends Fragment {
 
                 switch (position){
                     case 0:
-                       // return fragment_parking ;
+                        return fragment_historic ;
 
                     case 1:
-                      //  return fragmentIndoor;
-
-                    case 2:
-//                        return fragmentMap;
+                        return fragmentMap;
 
                     default:
                         return null;
@@ -45,7 +45,7 @@ public class FragmentMain_Historic extends Fragment {
 
             @Override
             public int getCount() {
-                return 3;
+                return 2;
             }
 
             @Override
@@ -53,10 +53,8 @@ public class FragmentMain_Historic extends Fragment {
 
                 switch (position){
                     case 0:
-                        return getString(R.string.Tabbar_Parking);
+                        return "LLista";
                     case 1:
-                        return getString(R.string.Tabbar_Indoor);
-                    case 2:
                         return getString(R.string.Tabbar_Maps);
                     default:
                         return null;

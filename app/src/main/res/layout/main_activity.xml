@@ -34,7 +34,8 @@
         app:menu="@menu/drawer"
         android:background="@android:color/white"
         android:layout_gravity="start"
-        android:id="@+id/navigationview" />
+        android:id="@+id/navigationview"
+        app:headerLayout="@layout/drawer_header"/>
 
 </android.support.v4.widget.DrawerLayout>
 

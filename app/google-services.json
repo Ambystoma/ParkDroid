@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "232034139445",
+    "firebase_url": "https://parkdroid-45bea.firebaseio.com",
+    "project_id": "parkdroid-45bea",
+    "storage_bucket": "parkdroid-45bea.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:232034139445:android:54451be6156a026b",
+        "android_client_info": {
+          "package_name": "com.parkingdroid.parkingdroid"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "232034139445-jr1frtptmpvhvjb3ijg7ev6atcigektu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCa8I6-64AswHaLu5Wa1paRzFKUdFSco00"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

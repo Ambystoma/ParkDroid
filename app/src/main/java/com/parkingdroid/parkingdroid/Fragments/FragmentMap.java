@@ -72,7 +72,8 @@ public class FragmentMap extends SupportMapFragment {
         if (park.getLatitude() != 0.0 && park.getLongitude() != 0.0) {
 
             LatLng itemPoint = new LatLng(park.getLatitude(), park.getLongitude());
-            LatLng itemPoint2 = new LatLng(41.490314, 2.357685);
+            LatLng itemPoint2 = new LatLng(park.getLatitude()+0.005, park.getLongitude()+0.005);
+            LatLng itemPoint3 = new LatLng(park.getLatitude()-0.005, park.getLongitude()-0.005);
 
             Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.appicon);
             BitmapDescriptor itemBitmap = BitmapDescriptorFactory.fromBitmap(icon);
@@ -87,9 +88,10 @@ public class FragmentMap extends SupportMapFragment {
             LatLngBounds bounds = new LatLngBounds.Builder()
                     .include(itemPoint)
                     .include(itemPoint2)
+                    .include(itemPoint3)
                     .build();
 
-            CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds, 50);
+            CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds, 150);
             mMap.animateCamera(update);
 
         }

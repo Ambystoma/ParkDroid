@@ -12,10 +12,12 @@
         android:text="Settings"
         android:layout_marginTop="30dp"/>
 
+
+
     <Switch
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Traking Service"
+        android:text="Activity Service"
         android:id="@+id/settings_switch1"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="30dp"
@@ -35,6 +37,15 @@
         android:textSize="20dp"
         android:checked="true"
         />
+
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="40dp"
+        android:id="@+id/Bluetoothdevices"/>
+
 
 
 </LinearLayout>
